@@ -1,0 +1,154 @@
+# ============================================================
+
+# Stage C : Kremer-Grest Equilibration
+
+# Star Melt
+
+#
+
+# Input:
+
+# output/compressed.restart
+
+#
+
+# Output:
+
+# output/kg_switched.restart
+
+# output/star_melt.restart
+
+# output/star_melt.data
+
+# output/stage_C_monitor.dat
+
+# output/traj_equil.lammpstrj
+
+#
+
+# TEST VERSION:
+
+# Production run = 100000 steps
+
+# ============================================================
+
+units           lj
+atom_style      bond
+boundary        p p p
+
+read_restart    output/compressed.restart
+
+# ------------------------------------------------------------
+
+# Communication
+
+# ------------------------------------------------------------
+
+comm_modify     cutoff 3.0
+
+neighbor        0.4 bin
+neigh_modify    every 1 delay 0 check yes
+
+# ============================================================
+
+# C1 : Switch to KG (FENE + WCA)
+
+# ============================================================
+
+bond_style      fene
+bond_coeff      1 30.0 1.5 1.0 1.0
+
+special_bonds   fene
+
+pair_style      lj/cut 1.12246204831
+pair_coeff      1 1 1.0 1.0 1.12246204831
+pair_modify     shift yes
+
+fix             switch all nve/limit 0.01
+
+timestep        0.001
+
+thermo_style    custom step temp pe ke etotal press density
+thermo          1000
+
+run             20000
+
+unfix           switch
+
+# ============================================================
+
+# C2 : Re-thermalisation
+
+# ============================================================
+
+velocity        all create 1.0 77777 rot yes dist gaussian
+
+fix             nvt_relax all nvt temp 1.0 1.0 0.1
+
+timestep        0.005
+
+thermo_style    custom step temp pe ke etotal press density
+thermo          5000
+
+run             50000
+
+unfix           nvt_relax
+
+write_restart   output/kg_switched.restart
+
+# ============================================================
+
+# C3 : Production Equilibration
+
+# ============================================================
+
+fix             nvt_equil all nvt temp 1.0 1.0 0.1
+
+timestep        0.005
+
+# ------------------------------------------------------------
+
+# Computes
+
+# ------------------------------------------------------------
+
+compute         gyr all gyration
+compute         msd all msd com yes
+
+variable        Rg2 equal c_gyr
+variable        msd_com equal c_msd[4]
+
+fix mon all ave/time 1000 1 1000 &
+v_Rg2 v_msd_com &
+file output/stage_C_monitor.dat
+
+# ------------------------------------------------------------
+
+# Output
+
+# ------------------------------------------------------------
+
+thermo_style custom step temp pe ke etotal press density v_Rg2 v_msd_com
+thermo 10000
+
+dump traj all custom 50000 output/traj_equil.lammpstrj id mol type x y z
+dump_modify traj sort id
+
+# ------------------------------------------------------------
+
+# TEST RUN
+
+# ------------------------------------------------------------
+
+run             100000
+
+# ------------------------------------------------------------
+
+# Save
+
+# ------------------------------------------------------------
+
+write_restart   output/star_melt.restart
+write_data      output/star_melt.data
+
+print "=== Stage C TEST complete ==="

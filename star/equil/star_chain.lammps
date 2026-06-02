@@ -1,0 +1,320 @@
+# ============================================================
+# Kremer-Grest Star Polymer
+# 6-arm star
+# 16 beads per arm
+# Total beads = 97
+# Validation architecture
+# ============================================================
+
+units           lj
+atom_style      bond
+boundary        p p p
+
+processors      1 1 1
+
+# -----------------------------
+# Parameters
+# -----------------------------
+
+variable        T       equal 1.0
+variable        tdamp   equal 0.1
+variable        dt_run  equal 0.005
+variable        seed    equal 12345
+
+variable        Narms   equal 6
+variable        ArmLen  equal 16
+
+variable        Lbox    equal 120.0
+
+# -----------------------------
+# Simulation box
+# -----------------------------
+
+region          simbox block 0 ${Lbox} 0 ${Lbox} 0 ${Lbox}
+create_box      1 simbox bond/types 1 extra/bond/per/atom 8
+
+# -----------------------------
+# KG potentials
+# -----------------------------
+
+pair_style      lj/cut 1.12246204831
+pair_coeff      1 1 1.0 1.0 1.12246204831
+pair_modify     shift yes
+
+bond_style      fene
+bond_coeff      1 30.0 1.5 1.0 1.0
+
+special_bonds   fene
+
+mass            1 1.0
+
+# ============================================================
+# Build Star Polymer
+# ============================================================
+
+variable        cx equal ${Lbox}/2.0
+variable        cy equal ${Lbox}/2.0
+variable        cz equal ${Lbox}/2.0
+
+variable        b0 equal 0.97
+
+# Core bead
+
+create_atoms 1 single ${cx} ${cy} ${cz}
+
+# ------------------------------------------------------------
+# Arm 1 (+x)
+# ------------------------------------------------------------
+
+variable i loop 16
+label arm1
+
+variable x equal ${cx}+${i}*${b0}
+
+create_atoms 1 single ${x} ${cy} ${cz}
+
+next i
+jump SELF arm1
+
+# ------------------------------------------------------------
+# Arm 2 (-x)
+# ------------------------------------------------------------
+
+variable i loop 16
+label arm2
+
+variable x equal ${cx}-${i}*${b0}
+
+create_atoms 1 single ${x} ${cy} ${cz}
+
+next i
+jump SELF arm2
+
+# ------------------------------------------------------------
+# Arm 3 (+y)
+# ------------------------------------------------------------
+
+variable i loop 16
+label arm3
+
+variable y equal ${cy}+${i}*${b0}
+
+create_atoms 1 single ${cx} ${y} ${cz}
+
+next i
+jump SELF arm3
+
+# ------------------------------------------------------------
+# Arm 4 (-y)
+# ------------------------------------------------------------
+
+variable i loop 16
+label arm4
+
+variable y equal ${cy}-${i}*${b0}
+
+create_atoms 1 single ${cx} ${y} ${cz}
+
+next i
+jump SELF arm4
+
+# ------------------------------------------------------------
+# Arm 5 (+z)
+# ------------------------------------------------------------
+
+variable i loop 16
+label arm5
+
+variable z equal ${cz}+${i}*${b0}
+
+create_atoms 1 single ${cx} ${cy} ${z}
+
+next i
+jump SELF arm5
+
+# ------------------------------------------------------------
+# Arm 6 (-z)
+# ------------------------------------------------------------
+
+variable i loop 16
+label arm6
+
+variable z equal ${cz}-${i}*${b0}
+
+create_atoms 1 single ${cx} ${cy} ${z}
+
+next i
+jump SELF arm6
+
+# ============================================================
+# Bonds
+# ============================================================
+
+# Core bead = atom 1
+
+# Arm 1 : atoms 2-17
+
+create_bonds single/bond 1 1 2
+
+variable j loop 15
+label bond1
+
+variable a equal ${j}+1
+variable b equal ${j}+2
+
+create_bonds single/bond 1 ${a} ${b}
+
+next j
+jump SELF bond1
+
+# Arm 2 : atoms 18-33
+
+create_bonds single/bond 1 1 18
+
+variable j loop 15
+label bond2
+
+variable a equal ${j}+17
+variable b equal ${j}+18
+
+create_bonds single/bond 1 ${a} ${b}
+
+next j
+jump SELF bond2
+
+# Arm 3 : atoms 34-49
+
+create_bonds single/bond 1 1 34
+
+variable j loop 15
+label bond3
+
+variable a equal ${j}+33
+variable b equal ${j}+34
+
+create_bonds single/bond 1 ${a} ${b}
+
+next j
+jump SELF bond3
+
+# Arm 4 : atoms 50-65
+
+create_bonds single/bond 1 1 50
+
+variable j loop 15
+label bond4
+
+variable a equal ${j}+49
+variable b equal ${j}+50
+
+create_bonds single/bond 1 ${a} ${b}
+
+next j
+jump SELF bond4
+
+# Arm 5 : atoms 66-81
+
+create_bonds single/bond 1 1 66
+
+variable j loop 15
+label bond5
+
+variable a equal ${j}+65
+variable b equal ${j}+66
+
+create_bonds single/bond 1 ${a} ${b}
+
+next j
+jump SELF bond5
+
+# Arm 6 : atoms 82-97
+
+create_bonds single/bond 1 1 82
+
+variable j loop 15
+label bond6
+
+variable a equal ${j}+81
+variable b equal ${j}+82
+
+create_bonds single/bond 1 ${a} ${b}
+
+next j
+jump SELF bond6
+
+# -----------------------------
+# Initial check
+# -----------------------------
+
+run 0
+
+velocity all create ${T} ${seed} rot yes dist gaussian
+
+# -----------------------------
+# Soft push
+# -----------------------------
+
+pair_style      soft 1.12246204831
+pair_coeff      1 1 10.0 1.12246204831
+
+bond_style      harmonic
+bond_coeff      1 30.0 0.97
+
+fix soft_push all nve/limit 0.05
+
+thermo 100
+
+run 500
+
+unfix soft_push
+
+# -----------------------------
+# Restore KG model
+# -----------------------------
+
+pair_style      lj/cut 1.12246204831
+pair_coeff      1 1 1.0 1.0 1.12246204831
+pair_modify     shift yes
+
+bond_style      fene
+bond_coeff      1 30.0 1.5 1.0 1.0
+
+special_bonds   fene
+
+# -----------------------------
+# Equilibration
+# -----------------------------
+
+timestep ${dt_run}
+
+fix nvt_eq all nvt temp ${T} ${T} ${tdamp}
+
+compute gyration all gyration
+compute msd_com all msd com yes
+
+variable Rg2 equal c_gyration
+variable msd equal c_msd_com[4]
+
+fix rg2_out all ave/time 1000 1 1000 v_Rg2 v_msd &
+file output/equil_monitor.dat
+
+thermo_style custom step temp pe ke etotal press atoms v_Rg2 v_msd
+thermo 1000
+
+dump traj all custom 10000 output/traj_equil.lammpstrj id type x y z
+dump_modify traj sort id
+
+# -----------------------------
+# Production run
+# -----------------------------
+
+run 2000000
+
+# -----------------------------
+# Save
+# -----------------------------
+
+write_restart output/star_equil.restart
+write_data output/star_equil.data
+
+print "=== Star equilibration complete ==="
