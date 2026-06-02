@@ -1,0 +1,4 @@
+units lj
+atom_style bond
+read_restart linear_melt_extended.restart
+run 0

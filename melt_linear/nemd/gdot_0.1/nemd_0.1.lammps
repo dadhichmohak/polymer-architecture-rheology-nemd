@@ -1,0 +1,118 @@
+# ============================================================
+
+# Linear Melt NEMD
+
+# gdot = 0.001
+
+# TEST RUN (50000 steps)
+
+# ============================================================
+
+units           lj
+atom_style      bond
+boundary        p p p
+
+read_restart    linear_melt_extended.restart
+
+# Needed for shear deformation
+
+change_box      all triclinic
+
+# ------------------------------------------------------------
+
+# KG model
+
+# ------------------------------------------------------------
+
+bond_style      fene
+bond_coeff      1 30.0 1.5 1.0 1.0
+
+special_bonds   fene
+
+pair_style      lj/cut 1.12246204831
+pair_coeff      1 1 1.0 1.0 1.12246204831
+pair_modify     shift yes
+
+comm_modify     cutoff 3.0
+
+neighbor        0.4 bin
+neigh_modify    every 1 delay 0 check yes
+
+# ------------------------------------------------------------
+
+# Shear rate
+
+# ------------------------------------------------------------
+
+variable gdot equal 0.1
+
+# ------------------------------------------------------------
+
+# Temperature and stress
+
+# ------------------------------------------------------------
+
+compute myTemp all temp/deform
+compute myPress all pressure myTemp
+
+# ------------------------------------------------------------
+
+# SLLOD NEMD
+
+# ------------------------------------------------------------
+
+fix deformBox all deform 1 xy erate ${gdot} remap v
+
+fix sllod all nvt/sllod temp 1.0 1.0 0.1
+
+thermo_modify temp myTemp
+
+# ------------------------------------------------------------
+
+# Stress output
+
+# ------------------------------------------------------------
+
+variable pxy equal c_myPress[4]
+variable pxx equal c_myPress[1]
+variable pyy equal c_myPress[2]
+
+fix stressOut all ave/time 1000 10 10000 v_pxy v_pxx v_pyy file output/stress_vs_time.dat
+
+# ------------------------------------------------------------
+
+# Thermo
+
+# ------------------------------------------------------------
+
+thermo_style custom step temp press v_pxy v_pxx v_pyy
+thermo 10000
+
+# ------------------------------------------------------------
+
+# Trajectory
+
+# ------------------------------------------------------------
+
+dump traj all custom 50000 output/traj_nemd.lammpstrj id mol type x y z
+dump_modify traj sort id
+
+# ------------------------------------------------------------
+
+# Run
+
+# ------------------------------------------------------------
+
+timestep        0.005
+
+run             1000000
+
+# ------------------------------------------------------------
+
+# Save
+
+# ------------------------------------------------------------
+
+write_restart   output/final.restart
+
+print "=== gdot 0.001 test complete ==="

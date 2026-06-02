@@ -1,0 +1,57 @@
+# Python
+
+**pycache**/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual env
+
+venv/
+.env
+
+# LAMMPS outputs
+
+*.restart
+*.lammpstrj
+*.dump
+
+# Logs
+
+*.log
+log.lammps
+slurm_*
+*.out
+*.err
+
+# Generated data
+
+output/
+
+# Analysis outputs
+
+*.png
+*.pdf
+
+# IDE
+
+.vscode/
+.idea/
+
+# OS
+
+.DS_Store
+Thumbs.db
+
+# Temporary
+
+tmp/
+temp/
+
+# Large generated files
+
+*.data
+
+# Git LFS tracking file can remain
+
+!.gitattributes

@@ -1,0 +1,117 @@
+# ============================================================
+# Stage B: Gradual Compression
+# Input : output/pushoff.restart
+# Output: output/compressed.restart
+#         output/compressed.data
+# ============================================================
+
+units           lj
+atom_style      bond
+boundary        p p p
+
+read_restart    output/pushoff.restart
+
+# ------------------------------------------------------------
+# Communication / neighbor settings
+# ------------------------------------------------------------
+
+comm_modify     cutoff 3.0
+
+neighbor        0.4 bin
+neigh_modify    every 1 delay 0 check yes
+
+# ------------------------------------------------------------
+# Harmonic bonds + soft potential
+# ------------------------------------------------------------
+
+bond_style      harmonic
+bond_coeff      1 200.0 1.0
+
+special_bonds   lj 0.0 1.0 1.0
+
+pair_style      soft 1.12246204831
+pair_coeff      1 1 100.0 1.12246204831
+
+# ------------------------------------------------------------
+# Thermostat
+# ------------------------------------------------------------
+
+fix             nvt all nvt temp 1.0 1.0 0.1
+
+timestep        0.005
+
+# ------------------------------------------------------------
+# Monitoring
+# ------------------------------------------------------------
+
+
+thermo_style custom step temp pe press density lx
+thermo 5000
+
+# ============================================================
+# Compression steps
+# Final target:
+# L = 13.306
+# rho = 0.85
+# ============================================================
+
+fix def all deform 1 x final 0.0 37.331 y final 0.0 37.331 z final 0.0 37.331 units box remap x
+run 20000
+unfix def
+
+fix def all deform 1 x final 0.0 34.661 y final 0.0 34.661 z final 0.0 34.661 units box remap x
+run 20000
+unfix def
+
+fix def all deform 1 x final 0.0 31.992 y final 0.0 31.992 z final 0.0 31.992 units box remap x
+run 20000
+unfix def
+
+fix def all deform 1 x final 0.0 29.322 y final 0.0 29.322 z final 0.0 29.322 units box remap x
+run 20000
+unfix def
+
+fix def all deform 1 x final 0.0 26.653 y final 0.0 26.653 z final 0.0 26.653 units box remap x
+run 20000
+unfix def
+
+fix def all deform 1 x final 0.0 23.983 y final 0.0 23.983 z final 0.0 23.983 units box remap x
+run 20000
+unfix def
+
+fix def all deform 1 x final 0.0 21.314 y final 0.0 21.314 z final 0.0 21.314 units box remap x
+run 20000
+unfix def
+
+fix def all deform 1 x final 0.0 18.645 y final 0.0 18.645 z final 0.0 18.645 units box remap x
+run 20000
+unfix def
+
+fix def all deform 1 x final 0.0 15.975 y final 0.0 15.975 z final 0.0 15.975 units box remap x
+run 20000
+unfix def
+
+fix def all deform 1 x final 0.0 13.306 y final 0.0 13.306 z final 0.0 13.306 units box remap x
+run 20000
+unfix def
+
+# ------------------------------------------------------------
+# Relax at final density
+# ------------------------------------------------------------
+
+run 100000
+
+unfix nvt
+
+# ------------------------------------------------------------
+# Save
+# ------------------------------------------------------------
+
+write_restart   output/compressed.restart
+write_data      output/compressed.data
+
+variable rho_final equal density
+
+print "=== Stage B complete ==="
+print "Target density = 0.85"
+print "Final density = ${rho_final}"
