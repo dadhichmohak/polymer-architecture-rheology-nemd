@@ -1,0 +1,46 @@
+Unknown Polymer Classification
+=============================
+
+Accuracy = 100.00%
+
+ ID       TrueClass Predicted  Distance
+U01          Linear    Linear  0.765765
+U02          Linear    Linear  1.260358
+U03          Linear    Linear  0.851271
+U04          Linear    Linear  1.077305
+U05          Linear    Linear  0.742615
+U06          Linear    Linear  0.841662
+U07          Linear    Linear  0.764264
+U08          Linear    Linear  1.020647
+U09          Linear    Linear  0.604936
+U10          Linear    Linear  0.681538
+U11          Linear    Linear  1.091223
+U12          Linear    Linear  1.306301
+U13            Star      Star  1.156068
+U14            Star      Star  0.984057
+U15            Star      Star  1.263811
+U16            Star      Star  1.142448
+U17            Star      Star  1.356767
+U18            Star      Star  0.987086
+U19            Star      Star  0.745978
+U20            Star      Star  1.055849
+U21            Star      Star  1.094288
+U22            Star      Star  1.114505
+U23            Star      Star  1.054018
+U24            Star      Star  1.164963
+U25        H-shaped  H-shaped  1.113479
+U26        H-shaped  H-shaped  0.919631
+U27        H-shaped  H-shaped  0.495530
+U28        H-shaped  H-shaped  0.654814
+U29        H-shaped  H-shaped  0.652838
+U30        H-shaped  H-shaped  1.164105
+U31        H-shaped  H-shaped  0.653337
+U32        H-shaped  H-shaped  0.639262
+U33        H-shaped  H-shaped  0.570571
+U34        H-shaped  H-shaped  0.516755
+U35        H-shaped  H-shaped  1.244585
+U36        H-shaped  H-shaped  1.103482
+U37 Linear/H-shaped    Linear  1.237122
+U38   Star/H-shaped      Star  0.890873
+U39     Linear/Star    Linear  1.492992
+U40   Star/H-shaped      Star  0.890873
