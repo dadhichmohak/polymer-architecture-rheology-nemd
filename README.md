@@ -197,9 +197,37 @@ n = 0.579
 
 ---
 
+
+## Current Progress
+
+### Completed
+
+* Linear polymer generation
+* Star polymer generation
+* Linear melt equilibration
+* Star melt equilibration
+* Linear melt NEMD simulations
+* Star melt NEMD simulations
+* Rheological analysis
+* Power-law fitting
+* Comparative viscosity and normal stress analysis
+
+### In Progress
+
+* H-shaped polymer implementation
+* H-shaped melt rheology
+
+### Planned
+
+* Architecture-aware rheology prediction
+* Data-driven/ML analysis
+* Final comparative study across architectures
+
+---
+---
+
 ## Future Work
 
-* Complete H-shaped architecture library
 * Unknown polymer classification
 * Automated rheology database generation
 * Machine-learning-based architecture prediction

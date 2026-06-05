@@ -1,0 +1,37 @@
+units           lj
+atom_style      bond
+boundary        p p p
+
+read_restart    ../../equil/output/star_melt_extended.restart
+
+bond_style      fene
+bond_coeff      1 30.0 1.5 1.0 1.0
+
+special_bonds   fene
+
+pair_style      lj/cut 1.12246204831
+pair_coeff      1 1 1.0 1.0 1.12246204831
+pair_modify     shift yes
+
+comm_modify     cutoff 3.0
+
+neighbor        0.4 bin
+neigh_modify    every 1 delay 0 check yes
+
+variable gdot equal 0.001
+
+fix deformbox all deform 1 xy erate ${gdot} remap v
+fix sllod all nvt/sllod temp 1.0 1.0 0.1
+
+compute p all pressure thermo_temp
+
+fix avg all ave/time 1000 10 10000 &
+        c_p[1] c_p[2] c_p[4] &
+        file output/stress_vs_time.dat
+
+thermo_style custom step temp pxx pyy pxy
+thermo 1000
+
+run 2500000
+
+write_restart output/final.restart

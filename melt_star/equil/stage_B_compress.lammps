@@ -10,6 +10,7 @@ atom_style      bond
 boundary        p p p
 
 read_restart    output/pushoff.restart
+reset_timestep 0
 
 # ------------------------------------------------------------
 # Communication / neighbor settings

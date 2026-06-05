@@ -37,6 +37,7 @@ atom_style      bond
 boundary        p p p
 
 read_restart    output/compressed.restart
+reset_timestep  0
 
 # ------------------------------------------------------------
 

@@ -1,32 +1,10 @@
 # ============================================================
 
-# Stage D : Additional Equilibration
+# Linear Melt NEMD
 
-# Star Melt
+# gdot = 0.001
 
-#
-
-# Input:
-
-# output/star_melt.restart
-
-#
-
-# Purpose:
-
-# Additional 200k-step safety equilibration
-
-#
-
-# Output:
-
-# output/star_melt_extended.restart
-
-# output/star_melt_extended.data
-
-# output/stage_C_monitor_extended.dat
-
-# output/traj_equil_extended.lammpstrj
+# TEST RUN (50000 steps)
 
 # ============================================================
 
@@ -34,12 +12,15 @@ units           lj
 atom_style      bond
 boundary        p p p
 
-read_restart    output/star_melt.restart
-reset_timestep  0
+read_restart    ../../equil/output/star_melt_extended.restart
+
+# Needed for shear deformation
+
+change_box      all triclinic
 
 # ------------------------------------------------------------
 
-# Force field
+# KG model
 
 # ------------------------------------------------------------
 
@@ -52,12 +33,6 @@ pair_style      lj/cut 1.12246204831
 pair_coeff      1 1 1.0 1.0 1.12246204831
 pair_modify     shift yes
 
-# ------------------------------------------------------------
-
-# Communication
-
-# ------------------------------------------------------------
-
 comm_modify     cutoff 3.0
 
 neighbor        0.4 bin
@@ -65,38 +40,53 @@ neigh_modify    every 1 delay 0 check yes
 
 # ------------------------------------------------------------
 
-# NVT Equilibration
+# Shear rate
 
 # ------------------------------------------------------------
 
-fix             nvt_equil all nvt temp 1.0 1.0 0.1
-
-timestep        0.005
+variable gdot equal 0.001
 
 # ------------------------------------------------------------
 
-# Computes
+# Temperature and stress
 
 # ------------------------------------------------------------
 
-compute         gyr all gyration
-compute         msd all msd com yes
-
-variable        Rg2 equal c_gyr
-variable        msd_com equal c_msd[4]
-
-fix mon all ave/time 1000 1 1000 &
-    v_Rg2 v_msd_com &
-    file output/stage_C_monitor_extended.dat
+compute myTemp all temp/deform
+compute myPress all pressure myTemp
 
 # ------------------------------------------------------------
 
-# Thermodynamics
+# SLLOD NEMD
 
 # ------------------------------------------------------------
 
-thermo_style custom step temp pe ke etotal press density v_Rg2 v_msd_com
-thermo          10000
+fix deformBox all deform 1 xy erate ${gdot} remap v
+
+fix sllod all nvt/sllod temp 1.0 1.0 0.1
+
+thermo_modify temp myTemp
+
+# ------------------------------------------------------------
+
+# Stress output
+
+# ------------------------------------------------------------
+
+variable pxy equal c_myPress[4]
+variable pxx equal c_myPress[1]
+variable pyy equal c_myPress[2]
+
+fix stressOut all ave/time 1000 10 10000 v_pxy v_pxx v_pyy file output/stress_vs_time.dat
+
+# ------------------------------------------------------------
+
+# Thermo
+
+# ------------------------------------------------------------
+
+thermo_style custom step temp press v_pxy v_pxx v_pyy
+thermo 10000
 
 # ------------------------------------------------------------
 
@@ -104,16 +94,18 @@ thermo          10000
 
 # ------------------------------------------------------------
 
-dump traj all custom 50000 output/traj_equil_extended.lammpstrj id mol type x y z
+dump traj all custom 50000 output/traj_nemd.lammpstrj id mol type x y z
 dump_modify traj sort id
 
 # ------------------------------------------------------------
 
-# Additional Equilibration
+# Run
 
 # ------------------------------------------------------------
 
-run             200000
+timestep        0.005
+
+run             1000000
 
 # ------------------------------------------------------------
 
@@ -121,7 +113,6 @@ run             200000
 
 # ------------------------------------------------------------
 
-write_restart   output/star_melt_extended.restart
-write_data      output/star_melt_extended.data
+write_restart   output/final.restart
 
-print "=== Stage D EXTENDED complete ==="
+print "=== gdot 0.001 test complete ==="

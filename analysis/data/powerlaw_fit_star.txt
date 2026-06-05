@@ -1,0 +1,3 @@
+Architecture : Star Melt
+K            : 1.422605
+n            : 0.520028

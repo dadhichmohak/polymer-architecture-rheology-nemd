@@ -1,0 +1,3 @@
+Architecture : Linear Melt
+K            : 1.512947
+n            : 0.579453
