@@ -1,0 +1,127 @@
+# ============================================================
+
+# Stage D : Additional Equilibration
+
+# Star Melt
+
+#
+
+# Input:
+
+# output/h_melt.restart
+
+#
+
+# Purpose:
+
+# Additional 200k-step safety equilibration
+
+#
+
+# Output:
+
+# output/h_melt_extended.restart
+
+# output/h_melt_extended.data
+
+# output/stage_C_monitor_extended.dat
+
+# output/traj_equil_extended.lammpstrj
+
+# ============================================================
+
+units           lj
+atom_style      bond
+boundary        p p p
+
+read_restart    output/h_melt.restart
+reset_timestep  0
+
+# ------------------------------------------------------------
+
+# Force field
+
+# ------------------------------------------------------------
+
+bond_style      fene
+bond_coeff      1 30.0 1.5 1.0 1.0
+
+special_bonds   fene
+
+pair_style      lj/cut 1.12246204831
+pair_coeff      1 1 1.0 1.0 1.12246204831
+pair_modify     shift yes
+
+# ------------------------------------------------------------
+
+# Communication
+
+# ------------------------------------------------------------
+
+comm_modify     cutoff 3.0
+
+neighbor        0.4 bin
+neigh_modify    every 1 delay 0 check yes
+
+# ------------------------------------------------------------
+
+# NVT Equilibration
+
+# ------------------------------------------------------------
+
+fix             nvt_equil all nvt temp 1.0 1.0 0.1
+
+timestep        0.005
+
+# ------------------------------------------------------------
+
+# Computes
+
+# ------------------------------------------------------------
+
+compute         gyr all gyration
+compute         msd all msd com yes
+
+variable        Rg2 equal c_gyr
+variable        msd_com equal c_msd[4]
+
+fix mon all ave/time 1000 1 1000 &
+    v_Rg2 v_msd_com &
+    file output/stage_C_monitor_extended.dat
+
+# ------------------------------------------------------------
+
+# Thermodynamics
+
+# ------------------------------------------------------------
+
+thermo_style custom step temp pe ke etotal press density v_Rg2 v_msd_com
+thermo          10000
+
+# ------------------------------------------------------------
+
+# Trajectory
+
+# ------------------------------------------------------------
+
+dump traj all custom 50000 output/traj_equil_extended.lammpstrj id mol type x y z
+dump_modify traj sort id
+
+# ------------------------------------------------------------
+
+# Additional Equilibration
+
+# ------------------------------------------------------------
+
+run             200000
+
+# ------------------------------------------------------------
+
+# Save
+
+# ------------------------------------------------------------
+
+write_restart   output/h_melt_extended.restart
+write_data      output/h_melt_extended.data
+
+print "=== Stage D EXTENDED complete ==="

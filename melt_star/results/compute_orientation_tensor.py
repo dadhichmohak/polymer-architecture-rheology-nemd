@@ -4,7 +4,7 @@ import numpy as np
 # User inputs
 # ============================================================
 
-DATAFILE = "../equil/output/linear_melt_extended.data"
+DATAFILE = "../equil/output/star_melt_extended.data"
 TRAJFILE = "../nemd/gdot_0.1/output/traj_nemd.lammpstrj"
 
 # ============================================================
@@ -133,7 +133,7 @@ imax = np.argmax(eigvals)
 # Output
 # ============================================================
 
-with open("orientation_linear.txt", "w") as f:
+with open("orientation_star.txt", "w") as f:
 
     f.write(f"Sxx = {S[0,0]:.6f}\n")
     f.write(f"Syy = {S[1,1]:.6f}\n")
@@ -155,4 +155,4 @@ with open("orientation_linear.txt", "w") as f:
     for x in vec:
         f.write(f"{x:.6f}\n")
 
-print("Orientation tensor written to orientation_linear.txt")
+print("Orientation tensor written to orientation_star.txt")
